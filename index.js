@@ -24,7 +24,9 @@ app.post("/webhook", (req, res) => {
     console.log(`Updating repository: ${url}`)
 
     // Use spawn instead of exec
-    const child = spawn("bash", [path.join(__dirname, "script.sh"), url])
+    const child = spawn("bash", [path.join(__dirname, "update_repo.sh"), url], {
+      stdio: "inherit",
+    })
 
     // Log output in real-time
     child.stdout.on("data", (data) => {
