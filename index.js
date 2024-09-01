@@ -1,5 +1,5 @@
 import express from "express"
-import { exec } from "child_process"
+import { spawn } from "child_process"
 import path from "path"
 import { fileURLToPath } from "url"
 
@@ -9,7 +9,7 @@ const app = express()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-console.log(__dirname)
+console.log("Current directory:", __dirname)
 
 app.use(express.json())
 
@@ -21,22 +21,30 @@ app.post("/webhook", (req, res) => {
   res.sendStatus(200)
 
   if (payload.ref === "refs/heads/main") {
-    // Execute the shell script asynchronously
-    exec(
-      `bash ${path.join(__dirname, "script.sh")} ${url}`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error: ${error.message}`)
-          return
-        }
-        if (stderr) {
-          console.error(`Stderr: ${stderr}`)
-          return
-        }
-        console.log(stdout)
-      }
-    )
+    console.log(`Updating repository: ${url}`)
+
+    // Use spawn instead of exec
+    const child = spawn("bash", [path.join(__dirname, "script.sh"), url])
+
+    // Log output in real-time
+    child.stdout.on("data", (data) => {
+      console.log(`stdout: ${data}`)
+    })
+
+    child.stderr.on("data", (data) => {
+      console.error(`stderr: ${data}`)
+    })
+
+    child.on("close", (code) => {
+      console.log(`child process exited with code ${code}`)
+    })
+
+    child.on("error", (error) => {
+      console.error(`Failed to start subprocess: ${error}`)
+    })
+  } else {
+    console.log("Received webhook, but not for the main branch. Ignoring.")
   }
 })
 
-app.listen(5000, () => console.log("server started"))
+app.listen(5000, () => console.log("Server started on port 5000"))
