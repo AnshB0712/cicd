@@ -17,6 +17,10 @@ app.post("/webhook", (req, res) => {
   const payload = req.body
   const url = payload.url
 
+  console.log(payload)
+
+  console.log(url)
+
   // Send the response immediately
   res.sendStatus(200)
 
