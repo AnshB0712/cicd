@@ -11,6 +11,8 @@ app.post("/webhook", (req, res) => {
 
   res.sendStatus(200)
 
+  console.log("send to webhook 200")
+
   if (payload.ref === "refs/heads/main") {
     exec(
       `bash ${path.join(__dirname, "script.sh")} ${url}`,
