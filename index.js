@@ -15,11 +15,7 @@ app.use(express.json())
 
 app.post("/webhook", (req, res) => {
   const payload = req.body
-  const url = payload.url
-
-  console.log(payload)
-
-  console.log(url)
+  const url = payload.repository.url
 
   // Send the response immediately
   res.sendStatus(200)
