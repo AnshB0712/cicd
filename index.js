@@ -8,8 +8,6 @@ const app = express()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-console.log("Current directory:", __dirname)
-
 app.use(express.json())
 
 app.post("/webhook", (req, res) => {
