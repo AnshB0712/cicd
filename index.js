@@ -5,7 +5,6 @@ import { fileURLToPath } from "url"
 
 const app = express()
 
-// Get __dirname equivalent
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -15,37 +14,31 @@ app.use(express.json())
 
 app.post("/webhook", (req, res) => {
   const payload = req.body
-  const url = payload.repository.url
+  const url = payload.repository?.url
 
   // Send the response immediately
   res.sendStatus(200)
 
-  if (payload.ref === "refs/heads/main") {
+  if (url && payload.ref === "refs/heads/main") {
     console.log(`Updating repository: ${url}`)
 
-    // Use spawn instead of exec
-    const child = spawn("bash", [path.join(__dirname, "script.sh"), url], {
-      stdio: "inherit",
-    })
+    try {
+      const child = spawn("bash", [path.join(__dirname, "script.sh"), url], {
+        stdio: "inherit",
+      })
 
-    // Log output in real-time
-    child.stdout.on("data", (data) => {
-      console.log(`${data}`)
-    })
+      child.on("error", (error) => {
+        console.error(`Failed to start subprocess: ${error}`)
+      })
 
-    child.stderr.on("data", (data) => {
-      console.error(`stderr: ${data}`)
-    })
-
-    child.on("close", (code) => {
-      console.log(`child process exited with code ${code}`)
-    })
-
-    child.on("error", (error) => {
-      console.error(`Failed to start subprocess: ${error}`)
-    })
+      child.on("close", (code) => {
+        console.log(`Child process exited with code ${code}`)
+      })
+    } catch (error) {
+      console.error(`Error spawning child process: ${error}`)
+    }
   } else {
-    console.log("Received webhook, but not for the main branch. Ignoring.")
+    console.log("Invalid webhook payload or not for the main branch. Ignoring.")
   }
 })
 

@@ -19,14 +19,25 @@ REPO_NAME=$(basename -s .git "$REPO_URL")
 # Function to stop running containers
 stop_running_containers() {
     echo "Stopping running containers..."
-    docker-compose down 2>/dev/null || docker stop $(docker ps -q) 2>/dev/null
+    if command -v docker-compose &> /dev/null; then
+        docker-compose down 2>/dev/null
+    else
+        docker stop $(docker ps -q) 2>/dev/null
+    fi
 }
 
 # Function to handle Docker Compose
 handle_docker_compose() {
-    echo "Docker Compose file found. Using docker-compose..."
-    docker-compose build
-    docker-compose up -d
+    echo "Docker Compose file found."
+    if command -v docker-compose &> /dev/null; then
+        echo "Using docker-compose..."
+        docker-compose build
+        docker-compose up -d
+    else
+        echo "docker-compose not found. Falling back to docker..."
+        docker build -t "$REPO_NAME" .
+        docker run -d "$REPO_NAME"
+    fi
 }
 
 # Function to handle Dockerfile
